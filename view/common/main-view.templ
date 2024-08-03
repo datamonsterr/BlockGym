@@ -1,0 +1,23 @@
+package viewCommon
+
+templ Card(imageURL string, title string, description string) {
+	<div
+		class="w-full h-full flex justify-end flex-col"
+		style="background-image: url(https://cdn.prod.website-files.com/64747b6996040b5fe401c250/6492e3d7f5a303b40e958de8_GYMSHARK.jpeg); background-size: cover; background-position: center;"
+	>
+		<div class="p-4 bg-primary w-full bg-opacity-75 text-base-100">
+			<h1 class="text-2xl font-bold">{ title }</h1>
+			<p class="text-base">{ description }</p>
+		</div>
+	</div>
+}
+
+templ Mainview() {
+	<div class="w-full h-fit grid grid-flow-row gap-4 grid-cols-4">
+		for i := 0; i < 40; i++ {
+			<div class="col-span-1 h-96">
+				@Card("https://picsum.photos/200", "Title", "Description")
+			</div>
+		}
+	</div>
+}
