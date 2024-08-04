@@ -13,9 +13,8 @@ templ Index() {
 		</head>
 		<body class="w-screen min-h-screen max-h-fit bg-base-100 text-foreground box-border overflow-x-hidden">
 			@viewCommon.Navbar()
-			<div id="container" class="w-full px-48 h-fit mt-10">
-				@viewCommon.Mainview()
-			</div>
+			<div id="container" class="w-full px-48 h-fit mt-10"></div>
+			<button class="px-5 py-3 text-2xl" hx-get="/user/data" hx-target="#container" hx-swap="innerHTML" hx-trigger="click">Main view</button>
 		</body>
 		<script src="/static/htmx/htmx.min.js" type="module">
 		</script>

@@ -36,15 +36,7 @@ func Index() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div id=\"container\" class=\"w-full px-48 h-fit mt-10\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = viewCommon.Mainview().Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></body><script src=\"/static/htmx/htmx.min.js\" type=\"module\">\n\t\t</script></html>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div id=\"container\" class=\"w-full px-48 h-fit mt-10\"></div><button class=\"px-5 py-3 text-2xl\" hx-get=\"/user/data\" hx-target=\"#container\" hx-swap=\"innerHTML\" hx-trigger=\"click\">Main view</button></body><script src=\"/static/htmx/htmx.min.js\" type=\"module\">\n\t\t</script></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
