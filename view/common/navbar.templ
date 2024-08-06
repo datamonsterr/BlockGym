@@ -1,11 +1,197 @@
 package viewCommon 
 
-script ClickAvt() {
-	let profileMenu = document.getElementById("profileMenu");
-	console.log("Clicked");
-	profileMenu.classList.toggle("hidden");
+script Animation(){
+	const observer = new IntersectionObserver((entries) => {
+  entries.forEach((entry) => {
+    console.log(entry);
+    if (entry.isIntersecting) {
+      entry.target.classList.add('show');
+    } else {
+      entry.target.classList.remove('show');
+    }
+  });
+});
+
+const hiddenElementsLeft = document.querySelectorAll('.hiddenLeft');
+const hiddenElementsRight = document.querySelectorAll('.hiddenRight');
+
+hiddenElementsLeft.forEach((el) => observer.observe(el));
+hiddenElementsRight.forEach((el) => observer.observe(el));
+
+gsap.registerPlugin(ScrollTrigger);
+
+// Navbar Animation
+gsap.from('.navbar', {
+  duration: 1,
+  opacity: 0,
+  y: -50,
+  ease: Power3.easeInOut
+});
+
+// Header Animations
+gsap.from('.logo-animate', 1, {
+  opacity: 0,
+  x: -20,
+  ease: Expo.easeInOut
+}, 0.08);
+
+gsap.from('.navbar-animate', 1, {
+  duration: 0.6,
+  opacity: 0,
+  x: 25,
+  stagger: 0.15,
+  ease: Power3.easeInOut
+}, 0.06);
+
+// Index Page Animations
+// Hero Animations
+gsap.from('.hero-animate-p', {
+  duration: 0.6,
+  opacity: 0,
+  y: -25,
+  stagger: 0.15
+});
+
+gsap.from('.hero-title-animate', 1, {
+  duration: 0.25,
+  opacity: 0,
+  y: 30,
+  x: 10,
+  ease: Power3.easeInOut
+}, 0.08);
+
+gsap.from('.hero-title-animate-2', 1, {
+  duration: 0.25,
+  opacity: 0,
+  delay: 0.2,
+  y: 30,
+  x: 10,
+  ease: Power3.easeInOut
+}, 0.08);
+
+gsap.from('.delay-span-animate', 1, {
+  duration: 0.3,
+  opacity: 0,
+  delay: 0.4,
+  y: 25,
+  x: 10,
+  ease: Expo.easeInOut
+}, 0.06);
+
+// Services Animation
+gsap.from('.img-animate-top-right', 1, {
+  scrollTrigger: '.img-animate-top-right',
+  duration: 0.8,
+  blur: 50,
+  opacity: 0,
+  x: 10,
+  y: -20
+}, 0.06);
+
+gsap.from('.img-animate-bottom-right', 1, {
+  scrollTrigger: '.img-animate-bottom-right',
+  duration: 0.8,
+  blur: 50,
+  opacity: 0,
+  x: 10,
+  y: 20
+}, 0.06);
+
+gsap.from('.img-animate-bottom-left', 1, {
+  scrollTrigger: '.img-animate-bottom-left',
+  duration: 0.8,
+  blur: 50,
+  opacity: 0,
+  x: -10,
+  y: 20
+}, 0.06);
+
+// Personal Trainers Animation
+gsap.from('.animate-team', {
+  scrollTrigger: '.animate-team',
+  duration: 1,
+  opacity: 0,
+  y: -100,
+  stagger: 0.3,
+  delay: 0.2
+});
+
+gsap.from('.animate-email', {
+  scrollTrigger: '.animate-email',
+  duration: 0.4,
+  opacity: 0,
+  y: -120,
+  stagger: 0.2,
+  delay: 0.4
+});
+
+// Memberships Animations
+gsap.from('.memb-animate-left', 1, {
+  scrollTrigger: '.memb-animate-left',
+  duration: 1,
+  opacity: 0,
+  x: -500,
+  stagger: 0.15,
+  blur: 20
+}, 0.06);
+
+gsap.from('.memb-animate-right', 1, {
+  scrollTrigger: '.memb-animate-right',
+  duration: 1,
+  opacity: 0,
+  x: 500,
+  stagger: 0.15,
+  blur: 20
+}, 0.06);
+
+gsap.from('.memb-animate-bottom', 1, {
+  scrollTrigger: '.memb-animate-bottom',
+  duration: 1,
+  opacity: 0,
+  y: 500,
+  stagger: 0.15,
+  blur: 20,
+  delay: 0.05
+}, 0.06);
 }
 
 templ Navbar() {
-	<nav class="w-full bg-primary pt-5 pb-3 px-16 text-xl text-foreground flex justify-between fixed top-0 left-0 min-h-2.5"></nav>
+	<nav class="navbar">
+
+      <a href="index.html"><img src="./logos/sparta-logo-red.png" alt="envizion-logo" class="navbar-logo logo-animate"></a>
+      <a href="index.html"><h1 class="logo-animate">En<span>Vizion</span> Gym</h1></a>
+
+      <div class="navbar-toggle" id="mobile-menu">
+
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+
+      </div>
+
+      <div class="navbar-menu navbar-animate">
+
+        <a href="index.html" class="navbar-link">Home</a>
+        <a href="news.html" class="navbar-link">News</a>
+        <a href="services.html" class="navbar-link">Services</a>
+        <a href="group-programs.html" class="navbar-link ">Group Programs</a>
+        <a href="membership.html" class="navbar-link ">Memberships</a>
+        <a href="about-us.html" class="navbar-link">About Us</a>
+        <a href="contact.html" class="navbar-link">Contact</a>
+
+
+        <button class="login-btn">
+          Login
+          <div class="tooltip">
+            <p class="margin">Don't Have an Account?</p>
+            <p>You can Sign Up</p>
+          </div>
+        </button>
+
+      </div>
+
+    </nav>
+	<script>
+		Navbar();
+	</script>
 }

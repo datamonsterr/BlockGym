@@ -1,4 +1,4 @@
-module github.com/datamonsterr/PTSolana
+module github.com/brianhuster/PTSolana
 
 go 1.21.6
 

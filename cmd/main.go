@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/datamonsterr/PTSolana/handler"
+	"github.com/brianhuster/PTSolana/handler"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
