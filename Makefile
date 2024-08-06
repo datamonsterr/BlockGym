@@ -9,7 +9,7 @@ css-watch:
 	@tailwindcss -i css/input.css -o static/css/output.css --watch
 
 setup-py-linux:
-	@python -m venv venv
+	@python3 -m venv venv
 	@venv/bin/pip install -r requirements.txt
 
 py-run:
