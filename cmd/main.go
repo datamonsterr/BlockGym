@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/brianhuster/PTSolana/handler"
+	"github.com/datamonsterr/PTsolana/handler"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -18,6 +18,6 @@ func main() {
 
 	e.GET("/", handler.GetIndex)
 
-	e.Static("/static", "static")
+	e.Static("/", "static")
 	log.Fatal(e.Start(":8080"))
 }
