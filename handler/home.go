@@ -1,12 +1,8 @@
 package handler
 
 import (
-<<<<<<< HEAD
 	"github.com/datamonsterr/PTsolana/view"
-=======
-	"github.com/datamonsterr/PTSolana/view"
-	viewCommon "github.com/datamonsterr/PTSolana/view/common"
->>>>>>> upstream/main
+	// viewCommon "github.com/datamonsterr/PTsolana/view/common"
 	"github.com/labstack/echo/v4"
 )
 
@@ -14,6 +10,22 @@ func GetIndex(c echo.Context) error {
 	return RenderTemplComp(c, view.Index())
 }
 
-func GetMainView(c echo.Context) error {
-	return RenderTemplComp(c, viewCommon.Mainview())
+func GetAboutUs(c echo.Context) error {
+	return RenderTemplComp(c, view.AboutUs())
+}
+
+func GetContact(c echo.Context) error {
+	return RenderTemplComp(c, view.Contact())
+}
+
+func GetMembership(c echo.Context) error {
+	return RenderTemplComp(c, view.Membership())
+}
+
+func GetServices(c echo.Context) error {
+	return RenderTemplComp(c, view.Services())
+}
+
+func GetManageClass(c echo.Context) error {
+	return RenderTemplComp(c, view.ManageClass())
 }

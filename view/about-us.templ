@@ -1,3 +1,9 @@
+package view
+
+import viewCommon "github.com/datamonsterr/PTsolana/view/common"
+
+templ AboutUs() {
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -28,41 +34,7 @@
 
   <header>
 
-    <nav class="navbar">
-
-      <a href="index.html"><img src="./logos/sparta-logo-red.png" alt="envizion-logo" class="navbar-logo logo-animate"></a>
-      <a href="index.html"><h1>En<span class="logo-animate">Vizion</span> Gym</h1></a>
-
-      <div class="navbar-toggle" id="mobile-menu">
-
-        <span class="bar"></span>
-        <span class="bar"></span>
-        <span class="bar"></span>
-
-      </div>
-
-      <div class="navbar-menu">
-
-        <a href="index.html" class="navbar-link">Home</a>
-        <a href="news.html" class="navbar-link">News</a>
-        <a href="services.html" class="navbar-link">Services</a>
-        <a href="group-programs.html" class="navbar-link ">Group Programs</a>
-        <a href="membership.html" class="navbar-link ">Memberships</a>
-        <a href="about-us.html" class="navbar-link underline">About Us</a>
-        <a href="contact.html" class="navbar-link ">Contact</a>
-
-
-        <button class="login-btn">
-          Login
-          <div class="tooltip">
-            <p class="margin">Don't Have an Account?</p>
-            <p>Sign Up</p>
-          </div>
-        </button>
-
-      </div>
-
-    </nav>
+    @viewCommon.Navbar()
 
   </header>
 
@@ -170,8 +142,8 @@
                   To view this video please enable JavaScript, and consider upgrading to a
                   web browser that
                 <a href="https://videojs.com/html5-video-support/" target="_blank"
-                  >supports HTML5 video</a
-                >
+                  >supports HTML5 video
+                </a>
               </p>
   
             </video>
@@ -311,3 +283,5 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.4/CustomEase.min.js"></script>
 
 </html>
+
+}

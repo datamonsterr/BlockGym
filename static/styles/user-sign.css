@@ -10,7 +10,7 @@
 
 
 .user-sign-in-container{
-  background-color: transparent;
+  background-color: black;
   position: fixed;
   border: 2px solid var(--secondary-color);
   max-width: 400px;
