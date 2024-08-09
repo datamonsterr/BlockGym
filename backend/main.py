@@ -22,25 +22,27 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-@BaseInstructionDataClass(name="init_gym_class")
+@BaseInstructionDataClass(name="init_gymclass")
 class GymClassInitInstruction:
-    name= HotaStringUTF8(lenArr=32)
-    location=HotaStringUTF8(lenArr=64)
-    info=HotaStringUTF8(lenArr=256)
-    price=HotaUint64()
     seed_sha256=HotaUint64()
+    price=HotaUint64()
+    location=HotaStringUTF16(lenArr=64)
+    name= HotaStringUTF16(lenArr=32)
+    info=HotaStringUTF16(lenArr=256)
+
 @BaseStructClass
 class GymClassData:
     company = HotaPublicKey() 
     trainer = HotaPublicKey()
     customer = HotaPublicKey()
-    name= HotaStringUTF8(lenArr=32)
-    location= HotaStringUTF8(lenArr=64)
-    info= HotaStringUTF8(lenArr=256)
+    name= HotaStringUTF16(lenArr=32)
+    location= HotaStringUTF16(lenArr=64)
+    info= HotaStringUTF16(lenArr=256)
     price =HotaUint64()
     is_done =HotaUint8()
-    seed_sha256 = HotaUint64()
-class InitPTModel(BaseModel):
+    seed_sha256 =HotaUint64()
+
+class InitGymClassModel(BaseModel):
     name: str
     location: str
     info: str
@@ -49,39 +51,38 @@ class InitPTModel(BaseModel):
 @app.post("/init-gymclass")
 async def init_gym_class(
     trainerPrivateKey: str,
-    initGymClassModel: InitPTModel,
+    initGymClassModel: InitGymClassModel,
 ):
     def fun():
-        owner_keypair = makeKeyPair(OWNER_PRIVATE_KEY)
+        company_keypair = makeKeyPair(OWNER_PRIVATE_KEY)
 
         instruction_data = GymClassInitInstruction()
-        instruction_data.get("name").object2struct(initGymClassModel.name)
-        instruction_data.get("location").object2struct(initGymClassModel.location)
-        instruction_data.get("info").object2struct(initGymClassModel.info)
-        instruction_data.get("price").object2struct(initGymClassModel.price)
         instruction_data.get("seed_sha256").random()
+        instruction_data.get("price").object2struct(initGymClassModel.price)
+        instruction_data.get("location").object2struct(initGymClassModel.location)
+        instruction_data.get("name").object2struct(initGymClassModel.name)
+        instruction_data.get("info").object2struct(initGymClassModel.info)
 
         gym_class_pubkey = findProgramAddress(createBytesFromArrayBytes(
-            owner_keypair.public_key.byte_value,
+            company_keypair.public_key.byte_value,
             "gymclass".encode("utf-8"),
             bytes(instruction_data.get("seed_sha256").serialize()),
         ), client.program_id)
         
         instruction_address = client.send_transaction(
-            instruction_data,
-            [
-                makePublicKey(sysvar_clock),
+            instruction_data=instruction_data,
+            pubkeys=[
                 makeKeyPair(trainerPrivateKey).public_key,
-                owner_keypair.public_key,
+                company_keypair.public_key,
                 gym_class_pubkey,
                 makePublicKey(sysvar_rent),
                 makePublicKey(system_program),
             ],
-            [
+            keypairs=[
                 makeKeyPair(trainerPrivateKey),
-                owner_keypair,
+                company_keypair,
             ],
-            fee_payer=makeKeyPair(trainerPrivateKey).public_key
+            fee_payer=company_keypair.public_key
         )
 
         return {
@@ -90,12 +91,20 @@ async def init_gym_class(
         }
     return make_response_auto_catch(fun)
 
+@app.get("/get-all-gym-classes-data")
+async def get_all_gym_classes_data():
+    def fun():
+        accounts = client.get_program_accounts()
+        data = []
+        for i in range(len(accounts)):
+            try:
+                account_data = client.get_account_data(accounts[i].pubkey, GymClassData, [8, 4])
+                data.append(account_data)
+            except Exception as e:
+                pass
+        return data
+    return make_response_auto_catch(fun)
 
-@app.get("/get-gymclasses")
-def get_gym_classes():
-    # gym_class_contracts = client.get_program_accounts()
-    # print(gym_class_contracts)
-    return {"gym_class_contracts": "abc"}
 
 #### Common function1
 @app.post("/convert-keypair-to-private-key")
@@ -113,11 +122,9 @@ async def convert_keypair_to_private_key(file: fastapi.UploadFile):
 async def get_gym_class_info(public_key: str):
     return make_response_auto_catch(lambda: client.get_account_info(PublicKey(public_key)))
 
-@app.get("/get-gym_class-data")
-async def get_gym_class_data(public_key: str):
-    data = client.get_account_data(PublicKey(public_key), GymClassData, [8, 4])
-    return make_response("ok", data, EnumStatus.SUCCESS)
-
+@app.get("/get-gym-class-data")
+async def get_parking_area_data(public_key: str):
+    return make_response_auto_catch(lambda: client.get_account_data(PublicKey(public_key), GymClassData, [8, 4]))
 @app.get("/get-balance")
 async def get_balance(public_key: str):
     return make_response_auto_catch(client.get_balance(public_key))
@@ -127,4 +134,4 @@ async def airdrop(public_key: str, amount: int = 1):
     return make_response_auto_catch(client.drop_sol(public_key, amount))
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="localhost", port=8000)
+    uvicorn.run("main:app", host="localhost", port=8000, reload=True)

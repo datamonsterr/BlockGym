@@ -19,7 +19,7 @@ export default function RootLayout({
         <html lang="en" className="dark">
             <body className={inter.className}>
                 <Navbar />
-                <div id="container" className="w-full h-fit px-40 mt-10">
+                <div id="container" className="w-full h-fit">
                     {children}
                 </div>
             </body>

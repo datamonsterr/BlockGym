@@ -36,7 +36,7 @@ class HotaSolanaRPC:
         account_info = self.get_account_info(public_key)
         account_data_bytes = base64.b64decode(account_info.data[0])
         print("Account data len: ", len(account_data_bytes))
-        account_data = AccountDataClass()
+        account_data : BaseStruct = AccountDataClass()
         print("Local account data len: ", account_data.size())
         if shift_bytes[0] > 0:
             print("shift_left: ", account_data_bytes[:shift_bytes[0]].hex())
@@ -88,6 +88,12 @@ class HotaSolanaRPC:
         )
         print(f"Dropped {amount} SOL with signature {sig}")
         return sig
+
+    def get_program_accounts(self):
+        data = self.connection.get_program_accounts(self.program_id, commitment={
+            "encoding": "base64"
+        })
+        return data
 
 class HotaSolanaClient(HotaSolanaRPC):
     def __init__(self, program_id: str, localhost=False, namenet="devnet"):

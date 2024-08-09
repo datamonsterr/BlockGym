@@ -178,17 +178,10 @@ mod blockchain {
         pub company: Signer<'info>,
         #[account(mut)]
         pub gymclass: Box<Account<'info, dot::program::GymClass>>,
-        pub system_program: Program<'info, System>,
     }
 
     pub fn customer_confirm_done(ctx: Context<CustomerConfirmDone>) -> Result<()> {
         let mut programs = HashMap::new();
-
-        programs.insert(
-            "system_program",
-            ctx.accounts.system_program.to_account_info(),
-        );
-
         let programs_map = ProgramsMap(programs);
         let customer = SeahorseSigner {
             account: &ctx.accounts.customer,
@@ -259,13 +252,13 @@ mod blockchain {
     }
 
     #[derive(Accounts)]
-    # [instruction (seed_sha256 : u64 , price : u64 , location_array: [u8; 64] , name_array: [u8; 32] , info_array: [u8; 256])]
+    # [instruction (seed_sha256 : u64 , price : u64 , location_array: [u16; 64] , name_array: [u16; 32] , info_array: [u16; 256])]
     pub struct InitGymclass<'info> {
         #[account(mut)]
         pub trainer: Signer<'info>,
         #[account(mut)]
         pub company: Signer<'info>,
-        # [account (init , space = std :: mem :: size_of :: < dot :: program :: GymClass > () + 8 , payer = trainer , seeds = [company . key () . as_ref () , "gymclass" . as_bytes () . as_ref () , seed_sha256 . to_le_bytes () . as_ref ()] , bump)]
+        # [account (init , space = std :: mem :: size_of :: < dot :: program :: GymClass > () + 8 , payer = company , seeds = [company . key () . as_ref () , "gymclass" . as_bytes () . as_ref () , seed_sha256 . to_le_bytes () . as_ref ()] , bump)]
         pub gymclass: Box<Account<'info, dot::program::GymClass>>,
         pub rent: Sysvar<'info, Rent>,
         pub system_program: Program<'info, System>,
@@ -275,9 +268,9 @@ mod blockchain {
         ctx: Context<InitGymclass>,
         seed_sha256: u64,
         price: u64,
-        location_array: [u8; 64],
-        name_array: [u8; 32],
-        info_array: [u8; 256],
+        location_array: [u16; 64],
+        name_array: [u16; 32],
+        info_array: [u16; 256],
     ) -> Result<()> {
         let mut programs = HashMap::new();
 
@@ -353,17 +346,10 @@ mod blockchain {
         pub company: Signer<'info>,
         #[account(mut)]
         pub gymclass: Box<Account<'info, dot::program::GymClass>>,
-        pub system_program: Program<'info, System>,
     }
 
     pub fn pt_decline_customer(ctx: Context<PtDeclineCustomer>) -> Result<()> {
         let mut programs = HashMap::new();
-
-        programs.insert(
-            "system_program",
-            ctx.accounts.system_program.to_account_info(),
-        );
-
         let programs_map = ProgramsMap(programs);
         let trainer = SeahorseSigner {
             account: &ctx.accounts.trainer,

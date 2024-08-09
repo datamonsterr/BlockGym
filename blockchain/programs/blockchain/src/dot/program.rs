@@ -12,9 +12,9 @@ pub struct GymClass {
     pub company: Pubkey,
     pub trainer: Pubkey,
     pub customer: Pubkey,
-    pub name_array: [u8; 32],
-    pub location_array: [u8; 64],
-    pub info_array: [u8; 256],
+    pub name_array: [u16; 32],
+    pub location_array: [u16; 64],
+    pub info_array: [u16; 256],
     pub price: u64,
     pub is_done: u8,
     pub seed_sha256: u64,
@@ -97,9 +97,9 @@ pub struct LoadedGymClass<'info, 'entrypoint> {
     pub company: Pubkey,
     pub trainer: Pubkey,
     pub customer: Pubkey,
-    pub name_array: Mutable<[u8; 32]>,
-    pub location_array: Mutable<[u8; 64]>,
-    pub info_array: Mutable<[u8; 256]>,
+    pub name_array: Mutable<[u16; 32]>,
+    pub location_array: Mutable<[u16; 64]>,
+    pub info_array: Mutable<[u16; 256]>,
     pub price: u64,
     pub is_done: u8,
     pub seed_sha256: u64,
@@ -124,33 +124,56 @@ pub fn customer_confirm_done_handler<'info>(
     let mut pt_money = (gymclass.borrow().price / 100) * 70;
     let mut customer_reward = (gymclass.borrow().price / 100) * 20;
 
-    solana_program::program::invoke(
-        &solana_program::system_instruction::transfer(
-            &company.key(),
-            &customer.clone().key(),
-            pt_money.clone(),
-        ),
-        &[
-            company.to_account_info(),
-            customer.clone().to_account_info(),
-            company.programs.get("system_program").clone(),
-        ],
-    )
-    .unwrap();
+    {
+        let amount = pt_money.clone();
 
-    solana_program::program::invoke(
-        &solana_program::system_instruction::transfer(
-            &company.key(),
-            &trainer.clone().key(),
-            customer_reward.clone(),
-        ),
-        &[
-            company.to_account_info(),
-            trainer.clone().to_account_info(),
-            company.programs.get("system_program").clone(),
-        ],
-    )
-    .unwrap();
+        **gymclass
+            .borrow()
+            .__account__
+            .to_account_info()
+            .try_borrow_mut_lamports()
+            .unwrap() -= amount;
+
+        **customer
+            .clone()
+            .to_account_info()
+            .try_borrow_mut_lamports()
+            .unwrap() += amount;
+    };
+
+    {
+        let amount = customer_reward.clone();
+
+        **gymclass
+            .borrow()
+            .__account__
+            .to_account_info()
+            .try_borrow_mut_lamports()
+            .unwrap() -= amount;
+
+        **trainer
+            .clone()
+            .to_account_info()
+            .try_borrow_mut_lamports()
+            .unwrap() += amount;
+    };
+
+    {
+        let amount = ((gymclass.borrow().price - pt_money) - customer_reward);
+
+        **gymclass
+            .borrow()
+            .__account__
+            .to_account_info()
+            .try_borrow_mut_lamports()
+            .unwrap() -= amount;
+
+        **company
+            .clone()
+            .to_account_info()
+            .try_borrow_mut_lamports()
+            .unwrap() += amount;
+    };
 }
 
 pub fn customer_join_gymclass_handler<'info>(
@@ -163,7 +186,7 @@ pub fn customer_join_gymclass_handler<'info>(
     }
 
     if !(gymclass.borrow().is_done < 2) {
-        panic!("gymclass already done!");
+        panic!("gymclass alr0eady done!");
     }
 
     assign!(gymclass.borrow_mut().customer, customer.key());
@@ -171,12 +194,12 @@ pub fn customer_join_gymclass_handler<'info>(
     solana_program::program::invoke(
         &solana_program::system_instruction::transfer(
             &customer.key(),
-            &company.clone().key(),
+            &gymclass.borrow().__account__.key(),
             gymclass.borrow().price.clone(),
         ),
         &[
             customer.to_account_info(),
-            company.clone().to_account_info(),
+            gymclass.borrow().__account__.to_account_info(),
             customer.programs.get("system_program").clone(),
         ],
     )
@@ -189,9 +212,9 @@ pub fn init_gymclass_handler<'info>(
     mut gymclass: Empty<Mutable<LoadedGymClass<'info, '_>>>,
     mut seed_sha256: u64,
     mut price: u64,
-    mut location_array: [u8; 64],
-    mut name_array: [u8; 32],
-    mut info_array: [u8; 256],
+    mut location_array: [u16; 64],
+    mut name_array: [u16; 32],
+    mut info_array: [u16; 256],
 ) -> () {
     let mut gymclass = gymclass.account.clone();
 
@@ -206,11 +229,11 @@ pub fn init_gymclass_handler<'info>(
 
     assign!(gymclass.borrow_mut().price, price);
 
-    assign!(gymclass.borrow_mut().location_array, Mutable::<[u8; 64]>::new(location_array));
+    assign!(gymclass.borrow_mut().location_array, Mutable::<[u16; 64]>::new(location_array));
 
-    assign!(gymclass.borrow_mut().name_array, Mutable::<[u8; 32]>::new(name_array));
+    assign!(gymclass.borrow_mut().name_array, Mutable::<[u16; 32]>::new(name_array));
 
-    assign!(gymclass.borrow_mut().info_array, Mutable::<[u8; 256]>::new(info_array));
+    assign!(gymclass.borrow_mut().info_array, Mutable::<[u16; 256]>::new(info_array));
 
     assign!(gymclass.borrow_mut().is_done, 0);
 
@@ -220,7 +243,7 @@ pub fn init_gymclass_handler<'info>(
         &solana_program::system_instruction::transfer(
             &trainer.key(),
             &company.clone().key(),
-            1000000000,
+            100000000,
         ),
         &[
             trainer.to_account_info(),
@@ -264,19 +287,22 @@ pub fn pt_decline_customer_handler<'info>(
         panic!("gymclass already done!");
     }
 
-    solana_program::program::invoke(
-        &solana_program::system_instruction::transfer(
-            &company.key(),
-            &customer.clone().key(),
-            gymclass.borrow().price.clone(),
-        ),
-        &[
-            company.to_account_info(),
-            customer.clone().to_account_info(),
-            company.programs.get("system_program").clone(),
-        ],
-    )
-    .unwrap();
+    {
+        let amount = gymclass.borrow().price.clone();
+
+        **gymclass
+            .borrow()
+            .__account__
+            .to_account_info()
+            .try_borrow_mut_lamports()
+            .unwrap() -= amount;
+
+        **customer
+            .clone()
+            .to_account_info()
+            .try_borrow_mut_lamports()
+            .unwrap() += amount;
+    };
 
     assign!(
         gymclass.borrow_mut().customer,

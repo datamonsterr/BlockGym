@@ -421,7 +421,7 @@ class Client:
             return [AccountInfo(account) for account in response['value']]
         return response
 
-    def get_program_accounts(self, public_key: PublicKey) -> RPCResponse[List[ProgramAccountType]] | List[ProgramAccount]:
+    def get_program_accounts(self, public_key: PublicKey, commitment: Optional[any] = None) -> RPCResponse[List[ProgramAccountType]] | List[ProgramAccount]:
         """
         Returns the program accounts.
 
@@ -432,7 +432,7 @@ class Client:
             RPCResponse: The response from the RPC endpoint.
         """
         response = self.build_and_send_request(
-            "getProgramAccounts", [public_key])
+            "getProgramAccounts", [public_key, commitment])
         if self.clean_response:
             return [ProgramAccount(account) for account in response]
         return response
