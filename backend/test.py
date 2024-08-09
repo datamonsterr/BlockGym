@@ -22,7 +22,7 @@ def convertToString(data:HotaStringUTF16, lenArr) -> str:
 # print(convertToString(location,64))
 # print(convertToString(info,256))
 
-seed = HotaUint64(11894801560357025724)
+""" seed = HotaUint64(11894801560357025724)
 print("seed: " + str(seed.value()))
 print("serial seed: " + str(seed.serialize()))
 company_pubkey = PublicKey("6zahakYqx6d6SsyA6E9QdPcetQSwt1APify4Z5bDSrjB")
@@ -33,3 +33,8 @@ print(findProgramAddress(createBytesFromArrayBytes(
     "gymclass".encode("utf-8"),
     bytes(seed.serialize())
 ), PublicKey("poTfdHjWbSsodLv1npNwAAtN4Cpa1hHTwHJJ9jXbvad")))
+ """
+
+phone_num = HotaStringUTF8(10) 
+phone_num.object2struct("My Gym")
+print(phone_num.struct2object())

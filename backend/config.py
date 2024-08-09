@@ -1,9 +1,10 @@
 import os
 OWNER_PRIVATE_KEY = os.getenv("OWNER_PRIVATE_KEY")
+OWNER_PUBLIC_KEY = os.getenv("OWNER_PUBLIC_KEY")
 SOLANA_NET = "devnet"
 LAMPORTS_PER_SOL = 1000000000
 
-PROGRAM_ID = "poTfdHjWbSsodLv1npNwAAtN4Cpa1hHTwHJJ9jXbvad"
+PROGRAM_ID = "FwrxzVAS7hdsWmnGmm1isX9u24wRpNiKiKR3RTaBbSDx"
 
 # Solana system public key
 sysvar_clock= "SysvarC1ock11111111111111111111111111111111"

@@ -1,24 +1,39 @@
-export class Trainer {
+export class GymClass {
     id: number;
     name: string;
-    age: number;
-    gender: boolean;
     location: string;
-    overview: string;
+    price: number;
+    flag: number;
+    status: string;
 
     constructor(
         id: number,
         name: string,
         age: number,
-        gender: boolean,
         location: string,
-        overview: string
+        flag: number
     ) {
         this.id = id;
         this.name = name;
-        this.age = age;
-        this.gender = gender;
+        this.price = age;
         this.location = location;
-        this.overview = overview;
+        this.flag = flag;
+        if (flag === 0) {
+            this.status = "Available";
+        } else {
+            this.status = "Unavailable";
+        }
     }
+}
+
+export interface GymData {
+    company: string;
+    trainer: string;
+    customer: string;
+    name: string;
+    location: string;
+    info: string;
+    price: number;
+    flag: number;
+    seed_sha256: number;
 }

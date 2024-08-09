@@ -13,7 +13,7 @@ use anchor_spl::{
 use dot::program::*;
 use std::{cell::RefCell, rc::Rc};
 
-declare_id!("poTfdHjWbSsodLv1npNwAAtN4Cpa1hHTwHJJ9jXbvad");
+declare_id!("FwrxzVAS7hdsWmnGmm1isX9u24wRpNiKiKR3RTaBbSDx");
 
 pub mod seahorse_util {
     use super::*;
@@ -169,6 +169,7 @@ mod blockchain {
     use std::collections::HashMap;
 
     #[derive(Accounts)]
+    # [instruction (review_array: [u16; 128])]
     pub struct CustomerConfirmDone<'info> {
         #[account(mut)]
         pub customer: Signer<'info>,
@@ -180,7 +181,10 @@ mod blockchain {
         pub gymclass: Box<Account<'info, dot::program::GymClass>>,
     }
 
-    pub fn customer_confirm_done(ctx: Context<CustomerConfirmDone>) -> Result<()> {
+    pub fn customer_confirm_done(
+        ctx: Context<CustomerConfirmDone>,
+        review_array: [u16; 128],
+    ) -> Result<()> {
         let mut programs = HashMap::new();
         let programs_map = ProgramsMap(programs);
         let customer = SeahorseSigner {
@@ -205,6 +209,7 @@ mod blockchain {
             trainer.clone(),
             company.clone(),
             gymclass.clone(),
+            review_array,
         );
 
         dot::program::GymClass::store(gymclass);
@@ -216,8 +221,6 @@ mod blockchain {
     pub struct CustomerJoinGymclass<'info> {
         #[account(mut)]
         pub customer: Signer<'info>,
-        #[account(mut)]
-        pub company: Signer<'info>,
         #[account(mut)]
         pub gymclass: Box<Account<'info, dot::program::GymClass>>,
         pub system_program: Program<'info, System>,
@@ -237,14 +240,9 @@ mod blockchain {
             programs: &programs_map,
         };
 
-        let company = SeahorseSigner {
-            account: &ctx.accounts.company,
-            programs: &programs_map,
-        };
-
         let gymclass = dot::program::GymClass::load(&mut ctx.accounts.gymclass, &programs_map);
 
-        customer_join_gymclass_handler(customer.clone(), company.clone(), gymclass.clone());
+        customer_join_gymclass_handler(customer.clone(), gymclass.clone());
 
         dot::program::GymClass::store(gymclass);
 
@@ -252,7 +250,90 @@ mod blockchain {
     }
 
     #[derive(Accounts)]
-    # [instruction (seed_sha256 : u64 , price : u64 , location_array: [u16; 64] , name_array: [u16; 32] , info_array: [u16; 256])]
+    pub struct HideTrainerAccount<'info> {
+        #[account(mut)]
+        pub trainer: Signer<'info>,
+        #[account(mut)]
+        pub trainer_account: Box<Account<'info, dot::program::Trainer>>,
+    }
+
+    pub fn hide_trainer_account(ctx: Context<HideTrainerAccount>) -> Result<()> {
+        let mut programs = HashMap::new();
+        let programs_map = ProgramsMap(programs);
+        let trainer = SeahorseSigner {
+            account: &ctx.accounts.trainer,
+            programs: &programs_map,
+        };
+
+        let trainer_account =
+            dot::program::Trainer::load(&mut ctx.accounts.trainer_account, &programs_map);
+
+        hide_trainer_account_handler(trainer.clone(), trainer_account.clone());
+
+        dot::program::Trainer::store(trainer_account);
+
+        return Ok(());
+    }
+
+    #[derive(Accounts)]
+    # [instruction (seed_random : u64 , name_array: [u16; 32] , location_array: [u16; 64] , info_array: [u16; 256] , phone_array: [u8; 10] , gender : u8)]
+    pub struct InitCustomerAccount<'info> {
+        #[account(mut)]
+        pub customer: Signer<'info>,
+        # [account (init , space = std :: mem :: size_of :: < dot :: program :: Customer > () + 8 , payer = customer , seeds = [customer . key () . as_ref () , "customer" . as_bytes () . as_ref () , seed_random . to_le_bytes () . as_ref ()] , bump)]
+        pub customer_account: Box<Account<'info, dot::program::Customer>>,
+        pub rent: Sysvar<'info, Rent>,
+        pub system_program: Program<'info, System>,
+    }
+
+    pub fn init_customer_account(
+        ctx: Context<InitCustomerAccount>,
+        seed_random: u64,
+        name_array: [u16; 32],
+        location_array: [u16; 64],
+        info_array: [u16; 256],
+        phone_array: [u8; 10],
+        gender: u8,
+    ) -> Result<()> {
+        let mut programs = HashMap::new();
+
+        programs.insert(
+            "system_program",
+            ctx.accounts.system_program.to_account_info(),
+        );
+
+        let programs_map = ProgramsMap(programs);
+        let customer = SeahorseSigner {
+            account: &ctx.accounts.customer,
+            programs: &programs_map,
+        };
+
+        let customer_account = Empty {
+            account: dot::program::Customer::load(
+                &mut ctx.accounts.customer_account,
+                &programs_map,
+            ),
+            bump: Some(ctx.bumps.customer_account),
+        };
+
+        init_customer_account_handler(
+            customer.clone(),
+            customer_account.clone(),
+            seed_random,
+            name_array,
+            location_array,
+            info_array,
+            phone_array,
+            gender,
+        );
+
+        dot::program::Customer::store(customer_account.account);
+
+        return Ok(());
+    }
+
+    #[derive(Accounts)]
+    # [instruction (seed_sha256 : u64 , price : u64 , name_array: [u16; 32] , info_array: [u16; 256])]
     pub struct InitGymclass<'info> {
         #[account(mut)]
         pub trainer: Signer<'info>,
@@ -268,7 +349,6 @@ mod blockchain {
         ctx: Context<InitGymclass>,
         seed_sha256: u64,
         price: u64,
-        location_array: [u16; 64],
         name_array: [u16; 32],
         info_array: [u16; 256],
     ) -> Result<()> {
@@ -301,12 +381,67 @@ mod blockchain {
             gymclass.clone(),
             seed_sha256,
             price,
-            location_array,
             name_array,
             info_array,
         );
 
         dot::program::GymClass::store(gymclass.account);
+
+        return Ok(());
+    }
+
+    #[derive(Accounts)]
+    # [instruction (seed_random : u64 , name_array: [u16; 32] , location_array: [u16; 64] , info_array: [u16; 256] , phone_array: [u8; 10] , age : u8 , gender : u8)]
+    pub struct InitTrainerAccount<'info> {
+        #[account(mut)]
+        pub trainer: Signer<'info>,
+        # [account (init , space = std :: mem :: size_of :: < dot :: program :: Trainer > () + 8 , payer = trainer , seeds = [trainer . key () . as_ref () , "trainer" . as_bytes () . as_ref () , seed_random . to_le_bytes () . as_ref ()] , bump)]
+        pub trainer_account: Box<Account<'info, dot::program::Trainer>>,
+        pub rent: Sysvar<'info, Rent>,
+        pub system_program: Program<'info, System>,
+    }
+
+    pub fn init_trainer_account(
+        ctx: Context<InitTrainerAccount>,
+        seed_random: u64,
+        name_array: [u16; 32],
+        location_array: [u16; 64],
+        info_array: [u16; 256],
+        phone_array: [u8; 10],
+        age: u8,
+        gender: u8,
+    ) -> Result<()> {
+        let mut programs = HashMap::new();
+
+        programs.insert(
+            "system_program",
+            ctx.accounts.system_program.to_account_info(),
+        );
+
+        let programs_map = ProgramsMap(programs);
+        let trainer = SeahorseSigner {
+            account: &ctx.accounts.trainer,
+            programs: &programs_map,
+        };
+
+        let trainer_account = Empty {
+            account: dot::program::Trainer::load(&mut ctx.accounts.trainer_account, &programs_map),
+            bump: Some(ctx.bumps.trainer_account),
+        };
+
+        init_trainer_account_handler(
+            trainer.clone(),
+            trainer_account.clone(),
+            seed_random,
+            name_array,
+            location_array,
+            info_array,
+            phone_array,
+            age,
+            gender,
+        );
+
+        dot::program::Trainer::store(trainer_account.account);
 
         return Ok(());
     }
@@ -343,8 +478,6 @@ mod blockchain {
         #[account(mut)]
         pub customer: Signer<'info>,
         #[account(mut)]
-        pub company: Signer<'info>,
-        #[account(mut)]
         pub gymclass: Box<Account<'info, dot::program::GymClass>>,
     }
 
@@ -361,21 +494,155 @@ mod blockchain {
             programs: &programs_map,
         };
 
-        let company = SeahorseSigner {
-            account: &ctx.accounts.company,
+        let gymclass = dot::program::GymClass::load(&mut ctx.accounts.gymclass, &programs_map);
+
+        pt_decline_customer_handler(trainer.clone(), customer.clone(), gymclass.clone());
+
+        dot::program::GymClass::store(gymclass);
+
+        return Ok(());
+    }
+
+    #[derive(Accounts)]
+    pub struct TrainerHideGymclass<'info> {
+        #[account(mut)]
+        pub trainer: Signer<'info>,
+        #[account(mut)]
+        pub gymclass: Box<Account<'info, dot::program::GymClass>>,
+    }
+
+    pub fn trainer_hide_gymclass(ctx: Context<TrainerHideGymclass>) -> Result<()> {
+        let mut programs = HashMap::new();
+        let programs_map = ProgramsMap(programs);
+        let trainer = SeahorseSigner {
+            account: &ctx.accounts.trainer,
             programs: &programs_map,
         };
 
         let gymclass = dot::program::GymClass::load(&mut ctx.accounts.gymclass, &programs_map);
 
-        pt_decline_customer_handler(
-            trainer.clone(),
+        trainer_hide_gymclass_handler(trainer.clone(), gymclass.clone());
+
+        dot::program::GymClass::store(gymclass);
+
+        return Ok(());
+    }
+
+    #[derive(Accounts)]
+    # [instruction (name_array: [u16; 32] , location_array: [u16; 64] , info_array: [u16; 256] , phone_array: [u8; 10])]
+    pub struct UpdateCustomerAccount<'info> {
+        #[account(mut)]
+        pub customer: Signer<'info>,
+        #[account(mut)]
+        pub customer_account: Box<Account<'info, dot::program::Customer>>,
+    }
+
+    pub fn update_customer_account(
+        ctx: Context<UpdateCustomerAccount>,
+        name_array: [u16; 32],
+        location_array: [u16; 64],
+        info_array: [u16; 256],
+        phone_array: [u8; 10],
+    ) -> Result<()> {
+        let mut programs = HashMap::new();
+        let programs_map = ProgramsMap(programs);
+        let customer = SeahorseSigner {
+            account: &ctx.accounts.customer,
+            programs: &programs_map,
+        };
+
+        let customer_account =
+            dot::program::Customer::load(&mut ctx.accounts.customer_account, &programs_map);
+
+        update_customer_account_handler(
             customer.clone(),
-            company.clone(),
+            customer_account.clone(),
+            name_array,
+            location_array,
+            info_array,
+            phone_array,
+        );
+
+        dot::program::Customer::store(customer_account);
+
+        return Ok(());
+    }
+
+    #[derive(Accounts)]
+    # [instruction (price : u64 , name_array: [u16; 32] , info_array: [u16; 256] , flag : u8)]
+    pub struct UpdateGymclass<'info> {
+        #[account(mut)]
+        pub trainer: Signer<'info>,
+        #[account(mut)]
+        pub gymclass: Box<Account<'info, dot::program::GymClass>>,
+    }
+
+    pub fn update_gymclass(
+        ctx: Context<UpdateGymclass>,
+        price: u64,
+        name_array: [u16; 32],
+        info_array: [u16; 256],
+        flag: u8,
+    ) -> Result<()> {
+        let mut programs = HashMap::new();
+        let programs_map = ProgramsMap(programs);
+        let trainer = SeahorseSigner {
+            account: &ctx.accounts.trainer,
+            programs: &programs_map,
+        };
+
+        let gymclass = dot::program::GymClass::load(&mut ctx.accounts.gymclass, &programs_map);
+
+        update_gymclass_handler(
+            trainer.clone(),
             gymclass.clone(),
+            price,
+            name_array,
+            info_array,
+            flag,
         );
 
         dot::program::GymClass::store(gymclass);
+
+        return Ok(());
+    }
+
+    #[derive(Accounts)]
+    # [instruction (name_array: [u16; 32] , location_array: [u16; 64] , info_array: [u16; 256] , phone_array: [u8; 10])]
+    pub struct UpdateTrainerAccount<'info> {
+        #[account(mut)]
+        pub trainer: Signer<'info>,
+        #[account(mut)]
+        pub trainer_account: Box<Account<'info, dot::program::Trainer>>,
+    }
+
+    pub fn update_trainer_account(
+        ctx: Context<UpdateTrainerAccount>,
+        name_array: [u16; 32],
+        location_array: [u16; 64],
+        info_array: [u16; 256],
+        phone_array: [u8; 10],
+    ) -> Result<()> {
+        let mut programs = HashMap::new();
+        let programs_map = ProgramsMap(programs);
+        let trainer = SeahorseSigner {
+            account: &ctx.accounts.trainer,
+            programs: &programs_map,
+        };
+
+        let trainer_account =
+            dot::program::Trainer::load(&mut ctx.accounts.trainer_account, &programs_map);
+
+        update_trainer_account_handler(
+            trainer.clone(),
+            trainer_account.clone(),
+            name_array,
+            location_array,
+            info_array,
+            phone_array,
+        );
+
+        dot::program::Trainer::store(trainer_account);
 
         return Ok(());
     }
