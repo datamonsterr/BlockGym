@@ -4,7 +4,7 @@ OWNER_PUBLIC_KEY = os.getenv("OWNER_PUBLIC_KEY")
 SOLANA_NET = "devnet"
 LAMPORTS_PER_SOL = 1000000000
 
-PROGRAM_ID = "FwrxzVAS7hdsWmnGmm1isX9u24wRpNiKiKR3RTaBbSDx"
+PROGRAM_ID = "4Bprhf44eKn2hm8WiHZZnbHbvUjeb9NKmrseBtYKY8te"
 
 # Solana system public key
 sysvar_clock= "SysvarC1ock11111111111111111111111111111111"

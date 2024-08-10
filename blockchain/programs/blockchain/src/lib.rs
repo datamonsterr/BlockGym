@@ -13,7 +13,7 @@ use anchor_spl::{
 use dot::program::*;
 use std::{cell::RefCell, rc::Rc};
 
-declare_id!("FwrxzVAS7hdsWmnGmm1isX9u24wRpNiKiKR3RTaBbSDx");
+declare_id!("4Bprhf44eKn2hm8WiHZZnbHbvUjeb9NKmrseBtYKY8te");
 
 pub mod seahorse_util {
     use super::*;
@@ -169,7 +169,7 @@ mod blockchain {
     use std::collections::HashMap;
 
     #[derive(Accounts)]
-    # [instruction (review_array: [u16; 128])]
+    # [instruction (review_array: [u8; 128])]
     pub struct CustomerConfirmDone<'info> {
         #[account(mut)]
         pub customer: Signer<'info>,
@@ -183,7 +183,7 @@ mod blockchain {
 
     pub fn customer_confirm_done(
         ctx: Context<CustomerConfirmDone>,
-        review_array: [u16; 128],
+        review_array: [u8; 128],
     ) -> Result<()> {
         let mut programs = HashMap::new();
         let programs_map = ProgramsMap(programs);
@@ -254,7 +254,7 @@ mod blockchain {
         #[account(mut)]
         pub trainer: Signer<'info>,
         #[account(mut)]
-        pub trainer_account: Box<Account<'info, dot::program::Trainer>>,
+        pub user: Box<Account<'info, dot::program::User>>,
     }
 
     pub fn hide_trainer_account(ctx: Context<HideTrainerAccount>) -> Result<()> {
@@ -265,35 +265,36 @@ mod blockchain {
             programs: &programs_map,
         };
 
-        let trainer_account =
-            dot::program::Trainer::load(&mut ctx.accounts.trainer_account, &programs_map);
+        let user = dot::program::User::load(&mut ctx.accounts.user, &programs_map);
 
-        hide_trainer_account_handler(trainer.clone(), trainer_account.clone());
+        hide_trainer_account_handler(trainer.clone(), user.clone());
 
-        dot::program::Trainer::store(trainer_account);
+        dot::program::User::store(user);
 
         return Ok(());
     }
 
     #[derive(Accounts)]
-    # [instruction (seed_random : u64 , name_array: [u16; 32] , location_array: [u16; 64] , info_array: [u16; 256] , phone_array: [u8; 10] , gender : u8)]
+    # [instruction (phone_array: [u8; 10] , name_array: [u8; 32] , email_array: [u8; 64] , location_array: [u8; 64] , info_array: [u8; 256] , age : u8 , gender : u8 , seed_random : u64)]
     pub struct InitCustomerAccount<'info> {
         #[account(mut)]
         pub customer: Signer<'info>,
-        # [account (init , space = std :: mem :: size_of :: < dot :: program :: Customer > () + 8 , payer = customer , seeds = [customer . key () . as_ref () , "customer" . as_bytes () . as_ref () , seed_random . to_le_bytes () . as_ref ()] , bump)]
-        pub customer_account: Box<Account<'info, dot::program::Customer>>,
+        # [account (init , space = std :: mem :: size_of :: < dot :: program :: User > () + 8 , payer = customer , seeds = [customer . key () . as_ref () , "customer" . as_bytes () . as_ref () , seed_random . to_le_bytes () . as_ref ()] , bump)]
+        pub user: Box<Account<'info, dot::program::User>>,
         pub rent: Sysvar<'info, Rent>,
         pub system_program: Program<'info, System>,
     }
 
     pub fn init_customer_account(
         ctx: Context<InitCustomerAccount>,
-        seed_random: u64,
-        name_array: [u16; 32],
-        location_array: [u16; 64],
-        info_array: [u16; 256],
         phone_array: [u8; 10],
+        name_array: [u8; 32],
+        email_array: [u8; 64],
+        location_array: [u8; 64],
+        info_array: [u8; 256],
+        age: u8,
         gender: u8,
+        seed_random: u64,
     ) -> Result<()> {
         let mut programs = HashMap::new();
 
@@ -308,37 +309,36 @@ mod blockchain {
             programs: &programs_map,
         };
 
-        let customer_account = Empty {
-            account: dot::program::Customer::load(
-                &mut ctx.accounts.customer_account,
-                &programs_map,
-            ),
-            bump: Some(ctx.bumps.customer_account),
+        let user = Empty {
+            account: dot::program::User::load(&mut ctx.accounts.user, &programs_map),
+            bump: Some(ctx.bumps.user),
         };
 
         init_customer_account_handler(
             customer.clone(),
-            customer_account.clone(),
-            seed_random,
+            user.clone(),
+            phone_array,
             name_array,
+            email_array,
             location_array,
             info_array,
-            phone_array,
+            age,
             gender,
+            seed_random,
         );
 
-        dot::program::Customer::store(customer_account.account);
+        dot::program::User::store(user.account);
 
         return Ok(());
     }
 
     #[derive(Accounts)]
-    # [instruction (seed_sha256 : u64 , price : u64 , name_array: [u16; 32] , info_array: [u16; 256])]
+    # [instruction (name_array: [u8; 32] , info_array: [u8; 256] , price : u64 , seed_sha256 : u64)]
     pub struct InitGymclass<'info> {
         #[account(mut)]
-        pub trainer: Signer<'info>,
-        #[account(mut)]
         pub company: Signer<'info>,
+        #[account(mut)]
+        pub trainer: Signer<'info>,
         # [account (init , space = std :: mem :: size_of :: < dot :: program :: GymClass > () + 8 , payer = company , seeds = [company . key () . as_ref () , "gymclass" . as_bytes () . as_ref () , seed_sha256 . to_le_bytes () . as_ref ()] , bump)]
         pub gymclass: Box<Account<'info, dot::program::GymClass>>,
         pub rent: Sysvar<'info, Rent>,
@@ -347,10 +347,10 @@ mod blockchain {
 
     pub fn init_gymclass(
         ctx: Context<InitGymclass>,
-        seed_sha256: u64,
+        name_array: [u8; 32],
+        info_array: [u8; 256],
         price: u64,
-        name_array: [u16; 32],
-        info_array: [u16; 256],
+        seed_sha256: u64,
     ) -> Result<()> {
         let mut programs = HashMap::new();
 
@@ -360,13 +360,13 @@ mod blockchain {
         );
 
         let programs_map = ProgramsMap(programs);
-        let trainer = SeahorseSigner {
-            account: &ctx.accounts.trainer,
+        let company = SeahorseSigner {
+            account: &ctx.accounts.company,
             programs: &programs_map,
         };
 
-        let company = SeahorseSigner {
-            account: &ctx.accounts.company,
+        let trainer = SeahorseSigner {
+            account: &ctx.accounts.trainer,
             programs: &programs_map,
         };
 
@@ -376,13 +376,13 @@ mod blockchain {
         };
 
         init_gymclass_handler(
-            trainer.clone(),
             company.clone(),
+            trainer.clone(),
             gymclass.clone(),
-            seed_sha256,
-            price,
             name_array,
             info_array,
+            price,
+            seed_sha256,
         );
 
         dot::program::GymClass::store(gymclass.account);
@@ -391,25 +391,26 @@ mod blockchain {
     }
 
     #[derive(Accounts)]
-    # [instruction (seed_random : u64 , name_array: [u16; 32] , location_array: [u16; 64] , info_array: [u16; 256] , phone_array: [u8; 10] , age : u8 , gender : u8)]
+    # [instruction (phone_array: [u8; 10] , name_array: [u8; 32] , email_array: [u8; 64] , location_array: [u8; 64] , info_array: [u8; 256] , age : u8 , gender : u8 , seed_random : u64)]
     pub struct InitTrainerAccount<'info> {
         #[account(mut)]
         pub trainer: Signer<'info>,
-        # [account (init , space = std :: mem :: size_of :: < dot :: program :: Trainer > () + 8 , payer = trainer , seeds = [trainer . key () . as_ref () , "trainer" . as_bytes () . as_ref () , seed_random . to_le_bytes () . as_ref ()] , bump)]
-        pub trainer_account: Box<Account<'info, dot::program::Trainer>>,
+        # [account (init , space = std :: mem :: size_of :: < dot :: program :: User > () + 8 , payer = trainer , seeds = [trainer . key () . as_ref () , "trainer" . as_bytes () . as_ref () , seed_random . to_le_bytes () . as_ref ()] , bump)]
+        pub user: Box<Account<'info, dot::program::User>>,
         pub rent: Sysvar<'info, Rent>,
         pub system_program: Program<'info, System>,
     }
 
     pub fn init_trainer_account(
         ctx: Context<InitTrainerAccount>,
-        seed_random: u64,
-        name_array: [u16; 32],
-        location_array: [u16; 64],
-        info_array: [u16; 256],
         phone_array: [u8; 10],
+        name_array: [u8; 32],
+        email_array: [u8; 64],
+        location_array: [u8; 64],
+        info_array: [u8; 256],
         age: u8,
         gender: u8,
+        seed_random: u64,
     ) -> Result<()> {
         let mut programs = HashMap::new();
 
@@ -424,24 +425,25 @@ mod blockchain {
             programs: &programs_map,
         };
 
-        let trainer_account = Empty {
-            account: dot::program::Trainer::load(&mut ctx.accounts.trainer_account, &programs_map),
-            bump: Some(ctx.bumps.trainer_account),
+        let user = Empty {
+            account: dot::program::User::load(&mut ctx.accounts.user, &programs_map),
+            bump: Some(ctx.bumps.user),
         };
 
         init_trainer_account_handler(
             trainer.clone(),
-            trainer_account.clone(),
-            seed_random,
+            user.clone(),
+            phone_array,
             name_array,
+            email_array,
             location_array,
             info_array,
-            phone_array,
             age,
             gender,
+            seed_random,
         );
 
-        dot::program::Trainer::store(trainer_account.account);
+        dot::program::User::store(user.account);
 
         return Ok(());
     }
@@ -474,9 +476,9 @@ mod blockchain {
     #[derive(Accounts)]
     pub struct PtDeclineCustomer<'info> {
         #[account(mut)]
-        pub trainer: Signer<'info>,
-        #[account(mut)]
         pub customer: Signer<'info>,
+        #[account(mut)]
+        pub trainer: Signer<'info>,
         #[account(mut)]
         pub gymclass: Box<Account<'info, dot::program::GymClass>>,
     }
@@ -484,19 +486,19 @@ mod blockchain {
     pub fn pt_decline_customer(ctx: Context<PtDeclineCustomer>) -> Result<()> {
         let mut programs = HashMap::new();
         let programs_map = ProgramsMap(programs);
-        let trainer = SeahorseSigner {
-            account: &ctx.accounts.trainer,
-            programs: &programs_map,
-        };
-
         let customer = SeahorseSigner {
             account: &ctx.accounts.customer,
             programs: &programs_map,
         };
 
+        let trainer = SeahorseSigner {
+            account: &ctx.accounts.trainer,
+            programs: &programs_map,
+        };
+
         let gymclass = dot::program::GymClass::load(&mut ctx.accounts.gymclass, &programs_map);
 
-        pt_decline_customer_handler(trainer.clone(), customer.clone(), gymclass.clone());
+        pt_decline_customer_handler(customer.clone(), trainer.clone(), gymclass.clone());
 
         dot::program::GymClass::store(gymclass);
 
@@ -529,20 +531,21 @@ mod blockchain {
     }
 
     #[derive(Accounts)]
-    # [instruction (name_array: [u16; 32] , location_array: [u16; 64] , info_array: [u16; 256] , phone_array: [u8; 10])]
+    # [instruction (phone_array: [u8; 10] , name_array: [u8; 32] , email_array: [u8; 64] , location_array: [u8; 64] , info_array: [u8; 256])]
     pub struct UpdateCustomerAccount<'info> {
         #[account(mut)]
         pub customer: Signer<'info>,
         #[account(mut)]
-        pub customer_account: Box<Account<'info, dot::program::Customer>>,
+        pub user: Box<Account<'info, dot::program::User>>,
     }
 
     pub fn update_customer_account(
         ctx: Context<UpdateCustomerAccount>,
-        name_array: [u16; 32],
-        location_array: [u16; 64],
-        info_array: [u16; 256],
         phone_array: [u8; 10],
+        name_array: [u8; 32],
+        email_array: [u8; 64],
+        location_array: [u8; 64],
+        info_array: [u8; 256],
     ) -> Result<()> {
         let mut programs = HashMap::new();
         let programs_map = ProgramsMap(programs);
@@ -551,25 +554,25 @@ mod blockchain {
             programs: &programs_map,
         };
 
-        let customer_account =
-            dot::program::Customer::load(&mut ctx.accounts.customer_account, &programs_map);
+        let user = dot::program::User::load(&mut ctx.accounts.user, &programs_map);
 
         update_customer_account_handler(
             customer.clone(),
-            customer_account.clone(),
+            user.clone(),
+            phone_array,
             name_array,
+            email_array,
             location_array,
             info_array,
-            phone_array,
         );
 
-        dot::program::Customer::store(customer_account);
+        dot::program::User::store(user);
 
         return Ok(());
     }
 
     #[derive(Accounts)]
-    # [instruction (price : u64 , name_array: [u16; 32] , info_array: [u16; 256] , flag : u8)]
+    # [instruction (name_array: [u8; 32] , info_array: [u8; 256] , price : u64)]
     pub struct UpdateGymclass<'info> {
         #[account(mut)]
         pub trainer: Signer<'info>,
@@ -579,10 +582,9 @@ mod blockchain {
 
     pub fn update_gymclass(
         ctx: Context<UpdateGymclass>,
+        name_array: [u8; 32],
+        info_array: [u8; 256],
         price: u64,
-        name_array: [u16; 32],
-        info_array: [u16; 256],
-        flag: u8,
     ) -> Result<()> {
         let mut programs = HashMap::new();
         let programs_map = ProgramsMap(programs);
@@ -596,10 +598,9 @@ mod blockchain {
         update_gymclass_handler(
             trainer.clone(),
             gymclass.clone(),
-            price,
             name_array,
             info_array,
-            flag,
+            price,
         );
 
         dot::program::GymClass::store(gymclass);
@@ -608,20 +609,21 @@ mod blockchain {
     }
 
     #[derive(Accounts)]
-    # [instruction (name_array: [u16; 32] , location_array: [u16; 64] , info_array: [u16; 256] , phone_array: [u8; 10])]
+    # [instruction (phone_array: [u8; 10] , name_array: [u8; 32] , email_array: [u8; 64] , location_array: [u8; 64] , info_array: [u8; 256])]
     pub struct UpdateTrainerAccount<'info> {
         #[account(mut)]
         pub trainer: Signer<'info>,
         #[account(mut)]
-        pub trainer_account: Box<Account<'info, dot::program::Trainer>>,
+        pub user: Box<Account<'info, dot::program::User>>,
     }
 
     pub fn update_trainer_account(
         ctx: Context<UpdateTrainerAccount>,
-        name_array: [u16; 32],
-        location_array: [u16; 64],
-        info_array: [u16; 256],
         phone_array: [u8; 10],
+        name_array: [u8; 32],
+        email_array: [u8; 64],
+        location_array: [u8; 64],
+        info_array: [u8; 256],
     ) -> Result<()> {
         let mut programs = HashMap::new();
         let programs_map = ProgramsMap(programs);
@@ -630,19 +632,19 @@ mod blockchain {
             programs: &programs_map,
         };
 
-        let trainer_account =
-            dot::program::Trainer::load(&mut ctx.accounts.trainer_account, &programs_map);
+        let user = dot::program::User::load(&mut ctx.accounts.user, &programs_map);
 
         update_trainer_account_handler(
             trainer.clone(),
-            trainer_account.clone(),
+            user.clone(),
+            phone_array,
             name_array,
+            email_array,
             location_array,
             info_array,
-            phone_array,
         );
 
-        dot::program::Trainer::store(trainer_account);
+        dot::program::User::store(user);
 
         return Ok(());
     }

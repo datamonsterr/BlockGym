@@ -35,6 +35,6 @@ print(findProgramAddress(createBytesFromArrayBytes(
 ), PublicKey("poTfdHjWbSsodLv1npNwAAtN4Cpa1hHTwHJJ9jXbvad")))
  """
 
-phone_num = HotaStringUTF8(10) 
-phone_num.object2struct("My Gym")
+phone_num = HotaStringUTF8(30) 
+phone_num.object2struct("")
 print(phone_num.struct2object())
