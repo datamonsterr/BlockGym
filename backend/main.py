@@ -126,6 +126,23 @@ def getPubkeyFromSeed(owner: PublicKey, secret_key: str, seed_random: int):
         bytes(HotaUint64(seed_random).serialize()),
     ), client.program_id)
 
+def normalize_gym_class_data(account_data: dict):
+    account_data["gym_class_public_key"] = str(getPubkeyFromSeed(PublicKey(account_data.get("company")), "gymclass", account_data.get("seed_sha256")))
+    account_data["price"] = account_data.get("price") / LAMPORTS_PER_SOL
+    account_data.pop("seed_sha256")
+    return account_data
+
+def normalize_user_data(account_data: dict, secret_key: str):
+    account_data["user_account_public_key"] = str(getPubkeyFromSeed(PublicKey(account_data.get("owner")), secret_key, account_data.get("seed_random")))
+    if account_data.get("gender") == 0:
+        account_data["gender"] = "male"
+    elif account_data.get("gender") == 1:
+        account_data["gender"] = "female"
+    else:
+        account_data["gender"] = "other"
+    account_data.pop("seed_random")
+    return account_data
+
 @app.post("/init-gymclass")
 async def init_gym_class(
     trainerPrivateKey: str,
@@ -301,9 +318,7 @@ async def get_all_trainer_accounts_data():
                 # account_data = client.get_account_info(accounts[i].pubkey)
                 account_data = client.get_account_data(accounts[i].pubkey, UserData, [8, 0])
                 if account_data.get("flag") == 5 or account_data.get("flag") == 6:
-                    trainerPubkey = PublicKey(account_data.get("owner"))
-                    account_data["account_public_key"] = str(getPubkeyFromSeed(trainerPubkey, "trainer", account_data.get("seed_random")))
-                    account_data.pop("seed_random")
+                    account_data = normalize_user_data(account_data, "trainer")
                     data.append(account_data)
             except Exception as e:
                 print(e)
@@ -313,18 +328,29 @@ async def get_all_trainer_accounts_data():
 # Still in process
 @app.get("/get-pending-request")
 async def get_customer_request(
-    trainerPrivateKey: str,
     gymClassPubkey: str
 ):
     def fun():
         accounts = client.get_program_accounts()
+        data = []
         for i in range(len(accounts)):
             try:
                 account = client.get_account_data(accounts[i].pubkey, GymClassData, [8, 4])
-                if account.get("flag") == 1:
-                    pass
+                pubkey =  getPubkeyFromSeed(PublicKey(account.get("company")), "gymclass", account.get("seed_sha256"))
+                print(str(pubkey))
+                if account.get("flag") == 1 and str(pubkey) == gymClassPubkey:
+                    account = normalize_gym_class_data(account)
+                    data.append(account)
+
             except Exception as e:
-                print(e.with_traceback())
+                if str(e) != "index out of range":
+                    data.append(
+                        {
+                            "error": str(e),
+                            "pubkey": str(accounts[i].pubkey),
+                        }
+                    )
+        return data
     return make_response_auto_catch(fun)
 
 # Todo: need to test
@@ -334,7 +360,7 @@ async def get_trainer_account_data(public_key: str):
         try:
             account_data = client.get_account_data(PublicKey(public_key), UserData, [8, 4])
             if account_data.get("flag") == 5 or account_data.get("flag") == 6:
-                return account_data
+                return normalize_user_data(account_data, "trainer")
             else:
                 return "This is not a trainer account"
         except Exception as e:
@@ -350,9 +376,7 @@ async def get_all_gym_classes_data():
             try:
                 account_data = client.get_account_data(accounts[i].pubkey, GymClassData, [8, 4])
                 if account_data.get("flag") <= 4:
-                    gymClassPubkey = PublicKey(account_data.get("company"))
-                    account_data["gym_class_public_key"] = str(getPubkeyFromSeed(gymClassPubkey, "gymclass", account_data.get("seed_sha256")))
-                    account_data.pop("seed_sha256")
+                    account_data = normalize_gym_class_data(account_data)
                     data.append(account_data)
             except Exception as e:
                 pass
