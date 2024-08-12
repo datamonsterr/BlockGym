@@ -310,6 +310,23 @@ async def get_all_trainer_accounts_data():
         return data
     return make_response_auto_catch(fun)
 
+# Still in process
+@app.get("/get-pending-request")
+async def get_customer_request(
+    trainerPrivateKey: str,
+    gymClassPubkey: str
+):
+    def fun():
+        accounts = client.get_program_accounts()
+        for i in range(len(accounts)):
+            try:
+                account = client.get_account_data(accounts[i].pubkey, GymClassData, [8, 4])
+                if account.get("flag") == 1:
+                    pass
+            except Exception as e:
+                print(e.with_traceback())
+    return make_response_auto_catch(fun)
+
 # Todo: need to test
 @app.get("/get-trainer-account-data")
 async def get_trainer_account_data(public_key: str):
@@ -357,6 +374,7 @@ async def convert_keypair_to_private_key(file: fastapi.UploadFile):
         "public_key": bs58.encode(keypair_bytes[32:]),
         "private_key": bs58.encode(keypair_bytes),
     }
+
 @BaseInstructionDataClass(name="customer_join_gymclass")
 class CustomerJoinGymClassInstruction:
     pass
