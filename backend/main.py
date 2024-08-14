@@ -145,42 +145,34 @@ def normalize_user_data(account_data: dict, secret_key: str):
 
 @app.post("/init-gymclass")
 async def init_gym_class(
-    trainerPrivateKey: str,
+    trainerPubkey: str,
     initGymClassModel: InitGymClassModel,
 ):
-    def fun():
-        company_keypair = makeKeyPair(OWNER_PRIVATE_KEY)
+    company_pubkey = makePublicKey(OWNER_PUBLIC_KEY)
 
-        instruction_data = GymClassInitInstruction()
-        instruction_data.get("name").object2struct(initGymClassModel.name)
-        instruction_data.get("info").object2struct(initGymClassModel.info)
-        instruction_data.get("price").object2struct(initGymClassModel.price)
-        instruction_data.get("seed_sha256").random()
+    instruction_data = GymClassInitInstruction()
+    instruction_data.get("name").object2struct(initGymClassModel.name)
+    instruction_data.get("info").object2struct(initGymClassModel.info)
+    instruction_data.get("price").object2struct(initGymClassModel.price)
+    instruction_data.get("seed_sha256").random()
 
-        gym_class_pubkey = getPubkeyFromSeed(company_keypair.public_key, "gymclass", int(instruction_data.get("seed_sha256").value()))        
-        print(gym_class_pubkey)
+    gym_class_pubkey = getPubkeyFromSeed(company_pubkey, "gymclass", int(instruction_data.get("seed_sha256").value()))        
+    print(gym_class_pubkey)
 
-        instruction_address = client.send_transaction(
-            instruction_data=instruction_data,
-            pubkeys=[
-                company_keypair.public_key,
-                makeKeyPair(trainerPrivateKey).public_key,
-                gym_class_pubkey,
-                makePublicKey(sysvar_rent),
-                makePublicKey(system_program),
-            ],
-            keypairs=[
-                company_keypair,
-                makeKeyPair(trainerPrivateKey),
-            ],
-            fee_payer=company_keypair.public_key
-        )
+    raw_transaction_data = client.create_transaction(
+        instruction_data=instruction_data,
+        pubkeys=[
+            company_pubkey,
+            makePublicKey(trainerPubkey),
+            gym_class_pubkey,
+            makePublicKey(sysvar_rent),
+            makePublicKey(system_program),
+        ],
+        is_signers = [True, True, False, False, False],
+        fee_payer=company_pubkey
+    )
 
-        return {
-            "instruction_address": instruction_address,
-            "gym_class_public_key": bs58.encode(gym_class_pubkey.byte_value),
-        }
-    return make_response_auto_catch(fun)
+    return raw_transaction_data
 
 @app.post("/update-gymclass")
 async def update_gym_class(
