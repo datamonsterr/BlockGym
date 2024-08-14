@@ -172,7 +172,7 @@ async def init_gym_class(
         fee_payer=company_pubkey
     )
 
-    return raw_transaction_data
+    return {"transaction": raw_transaction_data}
 
 @app.post("/update-gymclass")
 async def update_gym_class(
@@ -307,7 +307,6 @@ async def get_all_trainer_accounts_data():
         data = []
         for i in range(len(accounts)):
             try:
-                # account_data = client.get_account_info(accounts[i].pubkey)
                 account_data = client.get_account_data(accounts[i].pubkey, UserData, [8, 0])
                 if account_data.get("flag") == 5 or account_data.get("flag") == 6:
                     account_data = normalize_user_data(account_data, "trainer")
@@ -349,14 +348,17 @@ async def get_customer_request(
 @app.get("/get-trainer-account-data")
 async def get_trainer_account_data(public_key: str):
     def fun():
-        try:
-            account_data = client.get_account_data(PublicKey(public_key), UserData, [8, 4])
-            if account_data.get("flag") == 5 or account_data.get("flag") == 6:
-                return normalize_user_data(account_data, "trainer")
-            else:
-                return "This is not a trainer account"
-        except Exception as e:
-            return "cannot get to user account or the public key is invalid"
+        accounts = client.get_program_accounts()
+        account_data = None
+        for i in range(len(accounts)):
+            try:
+                account_data = client.get_account_data(accounts[i].pubkey, UserData, [8, 0])
+                if account_data.get("flag") == 5 or account_data.get("flag") == 6:
+                    if account_data.get("owner") == PublicKey(public_key):
+                        account_data = normalize_user_data(account_data, "trainer")
+            except Exception as e:
+                print(e)
+        return account_data
     return make_response_auto_catch(fun)
 
 @app.get("/get-all-gym-classes-data")

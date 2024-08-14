@@ -1,19 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { PublicKey } from "@solana/web3.js";
-import { Button } from "../ui/button";
-
-interface WindowWithSolana extends Window {
-    solana?: {
-        isPhantom: boolean;
-        connect: (config?: {
-            onlyIfTrusted: boolean;
-        }) => Promise<{ publicKey: PublicKey }>;
-        disconnect: () => Promise<void>;
-        publicKey: PublicKey | null;
-        on: (event: string, handler: (args: any) => void) => void;
-    };
-}
 
 declare const window: WindowWithSolana;
 

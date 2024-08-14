@@ -98,10 +98,8 @@ class HotaSolanaRPC:
             signers=[pubkeys[i] for i in range(len(pubkeys)) if is_signers[i]], fee_payer=fee_payer,
             recent_blockhash=self.connection.get_recent_blockhash().blockhash
         )
-        transaction.sign([bytes(pubkeys[i]) for i in range(len(pubkeys)) if is_signers[i]])
 
-
-        return transaction.serialize().hex()
+        return transaction.compile_transaction().hex()
     
     def get_balance(self, public_key: PublicKey):
         balance = self.connection.get_balance(public_key)
