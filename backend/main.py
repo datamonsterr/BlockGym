@@ -268,6 +268,24 @@ async def get_all_gym_classes_data():
         return data
     return make_response_auto_catch(fun)
 
+@app.get("/get-all-gym-classes-data-by-trainer")
+async def get_all_gym_classes_data(
+    trainerPubkey: str
+):
+    def fun():
+        accounts = client.get_program_accounts()
+        data = []
+        for i in range(len(accounts)):
+            try:
+                account_data = client.get_account_data(accounts[i].pubkey, GymClassData, [8, 4])
+                if account_data.get("flag") <= 4 and account_data.get("trainer") == trainerPubkey:
+                    account_data = normalize_gym_class_data(account_data)
+                    data.append(account_data)
+            except Exception as e:
+                pass
+        return data
+    return make_response_auto_catch(fun)
+
 @app.get("/get-gym-class-data")
 async def get_gym_class_data(public_key: str):
     return make_response_auto_catch(lambda: client.get_account_data(PublicKey(public_key), GymClassData, [8, 4]))
