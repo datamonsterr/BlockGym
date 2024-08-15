@@ -19,7 +19,7 @@ export default function Page() {
                         I am Trainer
                     </Button>
                 </a>
-                <a href="/home">
+                <a href="/view-gym-class">
                     <Button className="px-10 py-10 text-3xl">
                         I want to hire
                     </Button>

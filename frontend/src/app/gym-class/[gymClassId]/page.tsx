@@ -1,6 +1,11 @@
 "use client";
 import { GymData } from "@/lib/models";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import customerJoinClass from "@/lib/blockchain/customerJoinClass";
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
+import { sendAndConfirmRawTransaction } from "@solana/web3.js";
 
 export default function Page({ params }: { params: { gymClassId: string } }) {
     const [gymClass, setGymClass] = useState<GymData>();
@@ -14,6 +19,9 @@ export default function Page({ params }: { params: { gymClassId: string } }) {
         };
         fetchData();
     }, [params.gymClassId]);
+
+    const { connection } = useConnection();
+    const { publicKey, signTransaction } = useWallet();
 
     return (
         <div className="py-20 flex flex-col bg-slate-500 items-center px-10">
@@ -31,6 +39,27 @@ export default function Page({ params }: { params: { gymClassId: string } }) {
                 </div>
                 <h1>About</h1>
                 <div>{gymClass?.info}</div>
+            </div>
+            <div className="fixed bottom-10">
+                <Button onClick={
+                    async () => {
+                        if (publicKey && signTransaction) {
+                            try {
+                                const transaction = await customerJoinClass(
+                                    connection,
+                                    publicKey,
+                                    new PublicKey(params.gymClassId)
+                                );
+                                const signedTransaction = await signTransaction(transaction);
+                                const signature = await sendAndConfirmRawTransaction(connection, signedTransaction.serialize());
+
+                                console.log("Transaction signature:", signature);
+                            } catch (error) {
+                                console.error("Transaction failed", error);
+                            }
+                        }
+                    }
+                }>Join this class</Button>
             </div>
         </div>
     );

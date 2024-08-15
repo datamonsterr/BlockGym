@@ -284,35 +284,6 @@ async def convert_keypair_to_private_key(file: fastapi.UploadFile):
         "private_key": bs58.encode(keypair_bytes),
     }
 
-@BaseInstructionDataClass(name="customer_join_gymclass")
-class CustomerJoinGymClassInstruction:
-    pass
-@app.post("/customer-join-gymclass")
-async def customer_join(
-    customerPrivateKey: str,
-    gymClassPubkey: str,
-):
-    def fun():
-        customer_keypair = makeKeyPair(customerPrivateKey)
-        instruction_data = CustomerJoinGymClassInstruction()
-        gym_class_pubkey = PublicKey(gymClassPubkey)
-        instruction_address = client.send_transaction(
-            instruction_data=instruction_data,
-            pubkeys=[
-                customer_keypair.public_key,
-                gym_class_pubkey,
-                makePublicKey(system_program),
-            ],
-            keypairs=[
-                customer_keypair,
-            ],
-            fee_payer=customer_keypair.public_key
-        )
-        return {
-            "instruction_address": instruction_address,
-        }
-    return make_response_auto_catch(fun)
-
 @app.get("/get-gym-class-info")
 async def get_gym_class_info(public_key: str):
     return make_response_auto_catch(lambda: client.get_account_info(PublicKey(public_key)))
