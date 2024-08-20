@@ -1,16 +1,20 @@
-build:
-	@templ generate
-	@go build -o bin/server.exe cmd/*.go
+seahorse:
+	@cd blockchain && seahorse build
 
-run: build
-	bin/server.exe
+anchor-fix:
+	@python ./tools/anchor_fix.py blockchain/programs/blockchain/src
+
+solana: seahorse anchor-fix
 	
-css-watch:
-	@tailwindcss -i css/input.css -o static/css/output.css --watch
-
-setup-py-linux:
+setup:
 	@python3 -m venv venv
-	@venv/bin/pip install -r requirements.txt
+	@venv/bin/pip install -r backend/requirements.txt
+	@cd frontend && npm install
 
-py-run:
-	@venv/bin/python blockchain/client/main.py
+run-backend:
+	@venv/bin/python ./backend/main.py
+
+run-frontend:
+	@cd frontend && npm run dev
+
+
