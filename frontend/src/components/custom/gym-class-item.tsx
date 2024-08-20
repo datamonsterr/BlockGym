@@ -1,9 +1,11 @@
 import { GymData } from "@/lib/models";
-import * as React from "react";
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+
 export default function GymClassItem(gymclass: GymData) {
+    let trainer = gymclass.trainer
+    console.log(trainer)
+
     return (
         <Card className="w-[350px]">
             <div className="w-full">
@@ -16,7 +18,7 @@ export default function GymClassItem(gymclass: GymData) {
             <CardContent className="mt-2">
                 <div className="text-3xl">{gymclass.name}</div>
                 <div className="mt-2">
-                    <div>Location: {gymclass.location}</div>
+                    <div>Location: Hanoi, Vietnam</div>
                 </div>
             </CardContent>
             <CardFooter className="flex justify-between">

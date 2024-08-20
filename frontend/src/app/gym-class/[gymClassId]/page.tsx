@@ -18,7 +18,7 @@ export default function Page({ params }: { params: { gymClassId: string } }) {
             setGymClass(json.data);
         };
         fetchData();
-    }, [params.gymClassId]);
+    }, []);
 
     const { connection } = useConnection();
     const { publicKey, signTransaction } = useWallet();
@@ -35,7 +35,7 @@ export default function Page({ params }: { params: { gymClassId: string } }) {
                 </div>
                 <div className="-translate-y-5 bg-slate-500 px-4 flex flex-col items-center">
                     <div className="text-4xl">{gymClass?.name}</div>
-                    <div className="text-xl"> {gymClass?.location}</div>
+                    <div className="text-xl">Hanoi, Vietnam</div>
                 </div>
                 <h1>About</h1>
                 <div>{gymClass?.info}</div>

@@ -1,9 +1,9 @@
 export class GymClass {
+    flag: number;
     id: number;
     name: string;
     location: string;
     price: number;
-    flag: number;
     status: string;
 
     constructor(
@@ -13,11 +13,11 @@ export class GymClass {
         location: string,
         flag: number
     ) {
+        this.flag = flag;
         this.id = id;
         this.name = name;
         this.price = age;
         this.location = location;
-        this.flag = flag;
         if (flag === 0) {
             this.status = "Available";
         } else {
@@ -27,13 +27,28 @@ export class GymClass {
 }
 
 export interface GymData {
+    flag: number;
     company: string;
-    trainer: string;
     customer: string;
+    trainer: string;
     name: string;
-    location: string;
+    review:string;
     info: string;
     price: number;
-    flag: number;
-    seed_sha256: number;
+    gym_class_pubkey: string;
 }
+
+export interface UserData {
+    flag: number;
+    owner: string;
+    phone: string;
+    name: string;
+    email: string;
+    location:string;
+    info: string;
+    age: number;
+    gender: string;
+    user_acc_pubkey: number;
+    role: string;
+}
+
